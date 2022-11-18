@@ -1,0 +1,20 @@
+#app,body,html{
+  height: 100%;
+  overflow: hidden;
+}
+
+.h100{
+  height: 100%;
+}
+
+.tc{
+  text-align: center;
+}
+
+.m0a{
+  margin:0 auto !important;
+}
+
+.pt20{
+  padding-top: 20px;
+}
