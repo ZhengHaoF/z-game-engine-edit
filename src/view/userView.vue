@@ -82,6 +82,9 @@
                     </template>
                     <template v-if="column.key === 'backgroundMusic'">
                       {{ record.music.backgroundMusic.name }}
+                      <a-button type="primary" shape="circle" @click="playAudio(record.music.backgroundMusic.name)">
+                        <template #icon><play-circle-outlined /></template>
+                      </a-button>
                     </template>
                     <template v-if="column.key === 'role'">
                       <a-tag v-for="tag in record.role.map((item)=>{return item.name})">
@@ -208,7 +211,7 @@ import {
   VideoCameraAddOutlined,
   PlayCircleOutlined
 } from '@ant-design/icons-vue';
-
+import { message } from 'ant-design-vue';
 const editModal = ref(false)
 const columns = [
   {
@@ -573,13 +576,18 @@ const getChapterInfo = function (name) {
  * @param name 音乐名
  */
 const getRoleAudio:any = function (name) {
-  let audioInfo = {}
-  chapterInfo.value.material.musicList.role.forEach((item) => {
+  for (let item of chapterInfo.value.material.musicList.role) {
     if (item.name === name) {
-      audioInfo = item;
+      return item;
     }
-  })
-  return audioInfo;
+  }
+
+  for(let item of chapterInfo.value.material.musicList.background){
+    if (item.name === name) {
+      return item;
+    }
+  }
+  message.info("找不到对应语音");
 }
 
 
@@ -593,16 +601,18 @@ const editFun = function (row) {
   console.log(nodeRow.value)
 }
 
+// 音频播放器
+const playAudioInfo = ref(new Audio());
 /**
  * 播放指定音乐
- * @param src
+ * @param name 音乐名
  */
 const playAudio = function (name){
   let audioInfo = getRoleAudio(name);
   if(audioInfo['src']){
-    let play = new Audio()
-    play.src = audioInfo.src;
-    play.play();
+    playAudioInfo.value.pause();
+    playAudioInfo.value.src = audioInfo.src;
+    playAudioInfo.value.play();
   }
 
 }
