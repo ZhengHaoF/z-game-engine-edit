@@ -185,8 +185,32 @@
               </div>
             </a-list-item>
           </a-list>
+          <div>
+            <div style="width: 100%;display: flex;font-weight: bolder">
+              <div  style="flex: 2;padding: 5px">
+                <a-select placeholder="姓名" :filter-option="filterOption" show-search>
+                  <a-select-option v-for="role in chapterInfo['material']['roleList']" :value="role['name']">
+                    {{ role['name'] }}
+                  </a-select-option>
+                </a-select>
+              </div>
+              <div style="flex: 10;padding: 5px">
+                <a-input placeholder="文字" type="text"></a-input>
+              </div>
+              <div style="flex: 10;padding: 5px">
+                <a-select placeholder="语音" :filter-option="filterOption" show-search>
+                  <a-select-option v-for="role in chapterInfo['material']['musicList']['role']" :value="role['name']">
+                    {{ role['name'] }}
+                  </a-select-option>
+                </a-select>
+              </div>
+              <div style="flex: 2;padding: 5px">
+                <a-button @click="aiMatching">智能匹配</a-button>
+              </div>
+            </div>
+          </div>
           <div style="padding-top: 10px">
-            <a-button type="primary">添加</a-button>
+            <a-button type="primary" @click="addDialogue">添加</a-button>
           </div>
         </a-form-item>
         <a-form-item label="人物音乐">
@@ -626,8 +650,24 @@ const filterOption = (input: string, option: any) => {
   return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;
 };
 
+/**
+ * 导出剧本
+ */
 const outPutScript = function () {
   console.log(scriptRow)
+}
+
+/**
+ * 添加对话
+ */
+const addDialogue = function () {
+
+}
+/**
+ * 智能匹配
+ */
+const aiMatching = function (){
+
 }
 
 onMounted(() => {
