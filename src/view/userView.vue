@@ -112,11 +112,16 @@
                           <div style="flex: 2">
                             <a-tag>{{ item.name }}</a-tag>
                           </div>
-                          <div style="flex: 11">
+                          <div style="flex: 10">
                             <a-space> {{ item.text }}</a-space>
                           </div>
-                          <div style="flex: 11">
+                          <div style="flex: 10">
                             <a-space> {{ item.roleMusic }}</a-space>
+                          </div>
+                          <div style="flex: 2">
+                            <a-button type="primary" shape="circle" @click="playAudio(item.roleMusic)">
+                              <template #icon><play-circle-outlined /></template>
+                            </a-button>
                           </div>
                         </div>
                       </a-list-item>
@@ -201,7 +206,7 @@ import {
   FormOutlined,
   HighlightOutlined,
   VideoCameraAddOutlined,
-  EditOutlined
+  PlayCircleOutlined
 } from '@ant-design/icons-vue';
 
 const editModal = ref(false)
@@ -563,6 +568,20 @@ const getChapterInfo = function (name) {
   })[0]
 }
 
+/**
+ * 根据语音名获取语音
+ * @param name 音乐名
+ */
+const getRoleAudio:any = function (name) {
+  let audioInfo = {}
+  chapterInfo.value.material.musicList.role.forEach((item) => {
+    if (item.name === name) {
+      audioInfo = item;
+    }
+  })
+  return audioInfo;
+}
+
 
 const nodeRow = ref({});
 /**
@@ -572,6 +591,20 @@ const nodeRow = ref({});
 const editFun = function (row) {
   nodeRow.value = row;
   console.log(nodeRow.value)
+}
+
+/**
+ * 播放指定音乐
+ * @param src
+ */
+const playAudio = function (name){
+  let audioInfo = getRoleAudio(name);
+  if(audioInfo['src']){
+    let play = new Audio()
+    play.src = audioInfo.src;
+    play.play();
+  }
+
 }
 
 /**
