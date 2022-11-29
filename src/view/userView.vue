@@ -15,7 +15,7 @@
         <template #title>剧本编辑（edit）</template>
         <a-menu-item key="1">创建剧本</a-menu-item>
         <a-menu-item key="2">打开剧本</a-menu-item>
-        <a-menu-item key="3">导出剧本</a-menu-item>
+        <a-menu-item key="3" @click="outPutScript">导出剧本</a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="material">
         <template #icon>
@@ -67,7 +67,8 @@
                     {{ item.name }}
                   </a-tag>
                 </a-form-item>
-                <a-table :columns="columns" :data-source="chapterInfo['node']" :defaultExpandAllRows="true" :pagination="false"
+                <a-table :columns="columns" :data-source="chapterInfo['node']" :defaultExpandAllRows="true"
+                         :pagination="false"
                          :scroll="{y:'45vh'}" row-key="id">
                   <template #bodyCell="{ column, record,index }">
                     <template v-if="column.key === 'number'">
@@ -82,43 +83,128 @@
                     <template v-if="column.key === 'backgroundMusic'">
                       {{ record.music.backgroundMusic.name }}
                     </template>
-                    <template v-if="column.key === 'roleMusic'">
-                      {{ record.music.roleMusic.name }}
-                    </template>
                     <template v-if="column.key === 'role'">
                       <a-tag v-for="tag in record.role.map((item)=>{return item.name})">
                         {{ tag }}
                       </a-tag>
                     </template>
                     <template v-if="column.key === 'edit'">
-                      <a-button>编辑</a-button>
+                      <a-button @click="editModal = true;editFun(record)">编辑</a-button>
                     </template>
                   </template>
                   <template #expandedRowRender="{ record }">
                     <a-list size="small">
+                      <a-list-item>
+                        <div style="width: 100%;display: flex;font-weight: bolder">
+                          <div style="flex: 2">
+                            姓名
+                          </div>
+                          <div style="flex: 11">
+                            文字
+                          </div>
+                          <div style="flex: 11">
+                            语音
+                          </div>
+                        </div>
+                      </a-list-item>
                       <a-list-item v-for="item in record.dialogue.content">
-                        <a-tag>{{record.dialogue.name}}</a-tag>
-                        {{ item }}
+                        <div style="width: 100%;display: flex">
+                          <div style="flex: 2">
+                            <a-tag>{{ item.name }}</a-tag>
+                          </div>
+                          <div style="flex: 11">
+                            <a-space> {{ item.text }}</a-space>
+                          </div>
+                          <div style="flex: 11">
+                            <a-space> {{ item.roleMusic }}</a-space>
+                          </div>
+                        </div>
                       </a-list-item>
                     </a-list>
                   </template>
                 </a-table>
               </a-form>
             </a-tab-pane>
-            <a-tab-pane key="2" force-render tab="素材">素材管理器</a-tab-pane>
+            <a-tab-pane key="2" force-render tab="素材">
+              素材管理器
+            </a-tab-pane>
           </a-tabs>
         </div>
       </a-col>
     </a-row>
+    <a-modal width="80%" v-model:visible="editModal" title="编辑" @close="editModal=false">
+      <a-form>
+        <a-form-item label="背景图片">
+          <a-select v-model:value="nodeRow.background.name" :filter-option="filterOption" show-search>
+            <a-select-option v-for="bg in chapterInfo['material']['backgroundList']" :value="bg['name']">
+              {{ bg['name'] }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="背景音乐">
+          <a-select v-model:value="nodeRow.music.backgroundMusic.name" :filter-option="filterOption" show-search>
+            <a-select-option v-for="bg in chapterInfo['material']['musicList']['background']" :value="bg['name']">
+              {{ bg['name'] }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="对话">
+          <a-list size="small" style="max-height: 200px;overflow: hidden;overflow-y: scroll">
+            <a-list-item>
+              <div style="width: 100%;display: flex;font-weight: bolder">
+                <div style="flex: 2">
+                  姓名
+                </div>
+                <div style="flex: 11">
+                  文字
+                </div>
+                <div style="flex: 11">
+                  语音
+                </div>
+              </div>
+            </a-list-item>
+            <a-list-item v-for="item in nodeRow.dialogue.content">
+              <div style="width: 100%;display: flex">
+                <div style="flex: 2">
+                  <a-tag>{{ item.name }}</a-tag>
+                </div>
+                <div style="flex: 11">
+                  <a-space> {{ item.text }}</a-space>
+                </div>
+                <div style="flex: 11">
+                  <a-space> {{ item.roleMusic }}</a-space>
+                </div>
+              </div>
+            </a-list-item>
+          </a-list>
+          <div style="padding-top: 10px">
+            <a-button type="primary">添加</a-button>
+          </div>
+        </a-form-item>
+        <a-form-item label="人物音乐">
+          <a-select :filter-option="filterOption" show-search>
+            <a-select-option v-for="role in chapterInfo['material']['musicList']['role']" :value="role['name']">
+              {{ role['name'] }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 
 </template>
 
 <script lang="ts" setup>
 import {onMounted, Ref, ref} from "vue";
-import {MailOutlined, FormOutlined, HighlightOutlined, VideoCameraAddOutlined} from '@ant-design/icons-vue';
+import {
+  MailOutlined,
+  FormOutlined,
+  HighlightOutlined,
+  VideoCameraAddOutlined,
+  EditOutlined
+} from '@ant-design/icons-vue';
 
-
+const editModal = ref(false)
 const columns = [
   {
     title: '节点',
@@ -136,10 +222,6 @@ const columns = [
     dataIndex: 'music',
   },
   {
-    title: '人物语音',
-    key: 'roleMusic',
-    dataIndex: 'music',
-  }, {
     title: '人物',
     key: 'role',
     dataIndex: 'role',
@@ -157,8 +239,8 @@ const scriptRow = {
   "author": "作者",
   "chapter": [
     {
-      "name": "测试章节",
-      "info": "测试用的章节",
+      "name": "章节名",
+      "info": "章节信息",
       "material": {
         "roleList": [
           {
@@ -183,6 +265,50 @@ const scriptRow = {
             {
               "name": "ogg1",
               "src": "/assets/music/roleMusic/asumi111_019.ogg"
+            },
+            {
+              "name": "你好世界",
+              "src": "/assets/music/roleMusic/你好世界.mp3"
+            },
+            {
+              "name": "到这里就结束了",
+              "src": "/assets/music/roleMusic/到这里就结束了.mp3"
+            },
+            {
+              "name": "对话左边的是我的头图",
+              "src": "/assets/music/roleMusic/对话左边的是我的头图.mp3"
+            },
+            {
+              "name": "当然，右边也有一个人物位置",
+              "src": "/assets/music/roleMusic/当然，右边也有一个人物位置.mp3"
+            },
+            {
+              "name": "感谢你的观看",
+              "src": "/assets/music/roleMusic/感谢你的观看.mp3"
+            },
+            {
+              "name": "我是ZHF",
+              "src": "/assets/music/roleMusic/我是ZHF.mp3"
+            },
+            {
+              "name": "拜拜",
+              "src": "/assets/music/roleMusic/拜拜.mp3"
+            },
+            {
+              "name": "演示Z引擎的一些功能",
+              "src": "/assets/music/roleMusic/演示Z引擎的一些功能.mp3"
+            },
+            {
+              "name": "现在出现的是我的立绘",
+              "src": "/assets/music/roleMusic/现在出现的是我的立绘.mp3"
+            },
+            {
+              "name": "这是一个测试项目",
+              "src": "/assets/music/roleMusic/这是一个测试项目.mp3"
+            },
+            {
+              "name": "那个泳池是背景图",
+              "src": "/assets/music/roleMusic/那个泳池是背景图.mp3"
             }
           ],
           "background": [
@@ -201,24 +327,47 @@ const scriptRow = {
       },
       "node": [
         {
-          "id": "1",
+          "id": "id",
           "dialogue": {
-            "name": "ZHF",
             "headImg": "",
             "content": [
-              "你好世界",
-              "我是ZHF",
-              "这是一个测试项目",
-              "我将在这里演示z-game-engine引擎的一些功能",
-              "那个泳池是背景图",
-              "对话左边的是我的头图（headImage）"
+              {
+                "name": "ZHF",
+                "text": "...",
+                "roleMusic": "..."
+              },
+              {
+                "name": "ZHF",
+                "text": "我是ZHF",
+                "roleMusic": "我是ZHF"
+              },
+              {
+                "name": "ZHF",
+                "text": "这是一个测试项目",
+                "roleMusic": "这是一个测试项目"
+              },
+              {
+                "name": "ZHF",
+                "text": "我将在这里演示z-game-engine引擎的一些功能",
+                "roleMusic": "演示Z引擎的一些功能"
+              },
+              {
+                "name": "ZHF",
+                "text": "那个泳池是背景图",
+                "roleMusic": "那个泳池是背景图"
+              },
+              {
+                "name": "ZHF",
+                "text": "对话左边的是我的头图（headImage）",
+                "roleMusic": "对话左边的是我的头图"
+              }
             ]
           },
           "role": [
             {
-              "name": "ZHF",
+              "name": "人物名称",
               "status": "状态",
-              "position": "right"
+              "position": "方位"
             }
           ],
           "background": {
@@ -228,17 +377,19 @@ const scriptRow = {
             "backgroundMusic": {
               "name": "bgm1"
             },
-            "roleMusic": {
-              "name": "人物音乐名"
-            }
           }
         },
         {
-          "id": "2",
+          "id": "id",
           "dialogue": {
-            "name": "ZHF",
             "headImg": "",
-            "content": ["现在出现的是我的立绘（roleImage）"]
+            "content": [
+              {
+                "name": "ZHF",
+                "text": "现在出现的是我的立绘（roleImage）",
+                "roleMusic": "现在出现的是我的立绘"
+              }
+            ]
           },
           "role": [
             {
@@ -254,17 +405,22 @@ const scriptRow = {
             "backgroundMusic": {
               "name": "bgm1"
             },
-            "roleMusic": {
-              "name": "人物音乐名"
-            }
+            "roleMusic": [
+              "现在出现的是我的立绘"
+            ]
           }
         },
         {
-          "id": "3",
+          "id": "id",
           "dialogue": {
-            "name": "ZHF",
             "headImg": "",
-            "content": ["当然，右边也有一个人物位置"]
+            "content": [
+              {
+                "name": "ZHF",
+                "text":"当然，右边也有一个人物位置",
+                "roleMusic":"当然，右边也有一个人物位置"
+              }
+            ]
           },
           "role": [
             {
@@ -284,18 +440,20 @@ const scriptRow = {
           "music": {
             "backgroundMusic": {
               "name": "bgm1"
-            },
-            "roleMusic": {
-              "name": "人物音乐名"
             }
           }
         },
         {
-          "id": "4",
+          "id": "id",
           "dialogue": {
-            "name": "ZHF",
             "headImg": "",
-            "content": ["现在播放的是人物语音测试，我也不知道讲的是啥"]
+            "content": [
+              {
+                "name": "ZHF",
+                "text":"现在播放的是人物语音测试，我也不知道讲的是啥",
+                "roleMusic":"现在播放的是人物语音测试，我也不知道讲的是啥",
+              }
+            ]
           },
           "role": [
             {
@@ -316,20 +474,21 @@ const scriptRow = {
             "backgroundMusic": {
               "name": "bgm1"
             },
-            "roleMusic": {
-              "name": "ogg1"
-            }
+            "roleMusic": [
+              "ogg1"
+            ]
           }
         },
         {
-          "id": "5",
+          "id": "id",
           "dialogue": {
-            "name": "ZHF",
             "headImg": "",
             "content": [
-              "好了，到这里就结束了",
-              "感谢你的观看",
-              "拜拜~"
+              {
+                "name": "ZHF",
+                "text":"好了，到这里就结束了",
+                "roleMusic": "到这里就结束了"
+              }
             ]
           },
           "role": [
@@ -339,7 +498,7 @@ const scriptRow = {
               "position": "left"
             },
             {
-              "name": "ZHF2",
+              "name": "",
               "status": "out",
               "position": "right"
             }
@@ -350,9 +509,6 @@ const scriptRow = {
           "music": {
             "backgroundMusic": {
               "name": "bgm1"
-            },
-            "roleMusic": {
-              "name": ""
             }
           }
         }
@@ -408,6 +564,16 @@ const getChapterInfo = function (name) {
 }
 
 
+const nodeRow = ref({});
+/**
+ * 编辑按钮
+ * @param row
+ */
+const editFun = function (row) {
+  nodeRow.value = row;
+  console.log(nodeRow.value)
+}
+
 /**
  * 搜索功能
  * @param input
@@ -416,6 +582,10 @@ const getChapterInfo = function (name) {
 const filterOption = (input: string, option: any) => {
   return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;
 };
+
+const outPutScript = function () {
+  console.log(scriptRow)
+}
 
 onMounted(() => {
   getChapterList();
