@@ -21,22 +21,23 @@
         <template #icon>
           <highlight-outlined/>
         </template>
-        <template #title>章节素材（material）</template>
-        <a-menu-item-group title="角色列表（roleList）">
-          <a-menu-item key="setting:1">立绘（img）</a-menu-item>
-          <a-menu-item key="setting:2">头图（headImg）</a-menu-item>
-        </a-menu-item-group>
-        <a-menu-item key="setting:3">背景列表（backgroundList）</a-menu-item>
-        <a-menu-item-group title="所有音乐（musicList）">
-          <a-menu-item key="setting:3">Option 3</a-menu-item>
-          <a-menu-item key="setting:4">Option 4</a-menu-item>
-        </a-menu-item-group>
+        <template #title>素材（material）</template>
+        <a-menu-item key="1" @click="outputAll">导出所有</a-menu-item>
+<!--        <a-menu-item-group title="角色列表（roleList）">-->
+<!--          <a-menu-item key="setting:1">立绘（img）</a-menu-item>-->
+<!--          <a-menu-item key="setting:2">头图（headImg）</a-menu-item>-->
+<!--        </a-menu-item-group>-->
+<!--        <a-menu-item key="setting:3">背景列表（backgroundList）</a-menu-item>-->
+<!--        <a-menu-item-group title="所有音乐（musicList）">-->
+<!--          <a-menu-item key="setting:3">Option 3</a-menu-item>-->
+<!--          <a-menu-item key="setting:4">Option 4</a-menu-item>-->
+<!--        </a-menu-item-group>-->
       </a-sub-menu>
     </a-menu>
     <a-row style="padding-left: 10px;padding-right: 10px">
       <a-col :span="4">
-        <h3 style="text-align: center;line-height: 40px">{{scriptRow['name']?scriptRow['name']:"没有打开剧本"}}</h3>
-        <a-menu :inlineIndent="5" mode="inline" v-show="scriptRow['name']">
+        <h3 style="text-align: center;line-height: 40px">{{ scriptRow['name'] ? scriptRow['name'] : "没有打开剧本" }}</h3>
+        <a-menu v-show="scriptRow['name']" :inlineIndent="5" mode="inline">
           <a-sub-menu key="sub1">
             <template #icon>
               <MailOutlined/>
@@ -262,6 +263,8 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons-vue';
 import {message} from 'ant-design-vue';
+import JSZip from "jszip";
+import axios from "axios";
 
 const editModal = ref(false)
 const columns = [
@@ -298,7 +301,7 @@ const scriptRow = ref({})
 /**
  * 章节列表
  */
-const chapterList = ref([]);
+const chapterList = ref({});
 
 /**
  * 获取章节列表
@@ -388,7 +391,7 @@ const filterOption = (input: string, option: any) => {
 /**
  * 导出剧本
  */
-const outputScript = function () {
+const outputScript = async function () {
   const blob = new Blob([JSON.stringify(scriptRow.value)], {
     type: 'application/json'
   })
@@ -397,6 +400,98 @@ const outputScript = function () {
   console.log(a.href)
   a.download = `剧本${scriptRow.value.name}导出`
   a.click();
+}
+
+/**
+ * 导出剧本和所有素材
+ */
+const outputAll = async function () {
+  let zip = new JSZip();
+  zip.file("scriptRow.json", JSON.stringify(scriptRow.value));
+  //资源文件夹
+  let assets = zip.folder("assets");
+  //背景图片文件夹
+  let backgroundImg = assets.folder("backgroundImg");
+  //头图文件夹
+  let headImg = assets.folder("headImg");
+  //音乐文件夹
+  let music = assets.folder("music");
+  //背景音乐文件夹
+  let backgroundMusic = music.folder("backgroundMusic");
+  //人物音乐文件夹
+  let roleMusic = music.folder("roleMusic");
+  //人物立绘
+  let roleImg = assets.folder("roleImg");
+
+  let headImgList = new Set()
+  let roleImgList = new Set()
+  let backgroundList = new Set()
+  let musicListRole = new Set()
+  let musicListBackground = new Set()
+  let musicListMaterial = new Set()
+
+  //获取所有章节数据并去重
+  for (let chapter of scriptRow.value['chapter']) {
+    for (let item of chapter['material']['roleList']) {
+      headImgList.add(item['headImg'])
+      roleImgList.add(item['roleImg'])
+    }
+
+    for (let item of chapter['material']['backgroundList']) {
+      backgroundList.add(item['src'])
+    }
+
+    for (let item of chapter['material']['musicList']['role']) {
+      musicListRole.add(item['src'])
+    }
+
+    for (let item of chapter['material']['musicList']['background']) {
+      musicListBackground.add(item['src'])
+    }
+    for (let item of chapter['material']['musicList']['material']) {
+      musicListMaterial.add(item['src'])
+    }
+  }
+
+  for (const item of headImgList) {
+    await axios.get(item, {responseType: "blob"}).then((res) => {
+      zip.file(item, res.data, {optimizedBinaryString: true})
+    })
+  }
+  for (const item of roleImgList) {
+    await axios.get(item, {responseType: "blob"}).then((res) => {
+      zip.file(item, res.data, {optimizedBinaryString: true})
+    })
+  }
+  for (const item of backgroundList) {
+    await axios.get(item, {responseType: "blob"}).then((res) => {
+      zip.file(item, res.data, {optimizedBinaryString: true})
+    })
+  }
+  for (const item of musicListRole) {
+    await axios.get(item, {responseType: "blob"}).then((res) => {
+      zip.file(item, res.data, {optimizedBinaryString: true})
+    })
+  }
+  for (const item of musicListBackground) {
+    await axios.get(item, {responseType: "blob"}).then((res) => {
+      zip.file(item, res.data, {optimizedBinaryString: true})
+    })
+  }
+  for (const item of musicListMaterial) {
+    await axios.get(item, {responseType: "blob"}).then((res) => {
+      zip.file(item, res.data, {optimizedBinaryString: true})
+    })
+  }
+
+  zip.generateAsync({type: "blob"})
+      .then(function (content) {
+        let a = document.createElement('a')
+        a.href = URL.createObjectURL(content);
+        console.log(a.href)
+        a.download = `${scriptRow.value.name}导出`
+        a.click();
+      });
 }
 
 /**
@@ -430,53 +525,35 @@ const inputScript = function () {
 /**
  * 创建剧本
  */
-const newScript = function (){
+const newScript = function () {
   chapterInfo.value = {};
   scriptRow.value = {
-    "name":"剧本名",
-    "info":"剧本信息",
-    "author":"作者",
-    "chapter":[
+    "name": "剧本名",
+    "info": "剧本信息",
+    "author": "作者",
+    "chapter": [
       {
-        "name":"章节名",
-        "info":"章节信息",
-        "material":{
-          "roleList":[
-
-          ],
-          "backgroundList":[
-
-          ],
-          "musicList":{
-            "role":[
-
-            ],
-            "background":[
-
-            ],
-            "source":[
-
-            ]
+        "name": "章节名",
+        "info": "章节信息",
+        "material": {
+          "roleList": [],
+          "backgroundList": [],
+          "musicList": {
+            "role": [],
+            "background": [],
+            "source": []
           }
         },
-        "node":[
+        "node": [
           {
-            "id":"id",
-            "dialogue":{
-              "content":[
-
-              ]
+            "id": "id",
+            "dialogue": {
+              "content": []
             },
-            "role":[
-
-            ],
-            "background":{
-
-            },
-            "music":{
-              "backgroundMusic":{
-
-              }
+            "role": [],
+            "background": {},
+            "music": {
+              "backgroundMusic": {}
             }
           }
         ]
@@ -520,15 +597,15 @@ const aiMatching = function () {
 
 
 onMounted(() => {
-  if(sessionStorage.getItem("scriptRow") !== null){
+  if (sessionStorage.getItem("scriptRow") !== null) {
     scriptRow.value = JSON.parse(sessionStorage.getItem("scriptRow"));
     message.info("已从本地缓存打开剧本")
   }
   if (scriptRow.value["name"] !== undefined) {
     getChapterList();
   }
-  document.addEventListener('keydown', function(e){
-    if(e.ctrlKey && e.key.toUpperCase() === "S"){
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey && e.key.toUpperCase() === "S") {
       e.preventDefault()
       sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
       message.success("保存成功")
