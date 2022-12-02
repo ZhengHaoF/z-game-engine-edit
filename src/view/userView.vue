@@ -12,8 +12,8 @@
         <template #icon>
           <form-outlined/>
         </template>
-        <template #title>剧本编辑（edit）</template>
-        <a-menu-item key="1">创建剧本</a-menu-item>
+        <template #title>剧本（edit）</template>
+        <a-menu-item key="1" @click="newScript">创建剧本</a-menu-item>
         <a-menu-item key="2" @click="inputScript">打开剧本</a-menu-item>
         <a-menu-item key="3" @click="outputScript">导出剧本</a-menu-item>
       </a-sub-menu>
@@ -51,7 +51,7 @@
           </a-sub-menu>
         </a-menu>
       </a-col>
-      <a-col v-if="chapterInfo.hasOwnProperty('name')" :span="20">
+      <a-col v-if="Object.keys(chapterInfo).length >0" :span="20">
         <div style="padding: 20px">
           <a-tabs>
             <a-tab-pane key="1" tab="编辑">
@@ -327,6 +327,7 @@ const getChapterInfo = function (name) {
       return true;
     }
   })[0]
+  return {};
 }
 
 /**
@@ -402,6 +403,7 @@ const outputScript = function () {
  * 导入剧本
  */
 const inputScript = function () {
+  chapterInfo.value = {};
   let file = document.createElement('input')
   file.type = "file";
   file.click();
@@ -423,6 +425,67 @@ const inputScript = function () {
       }
     }
   }
+}
+
+/**
+ * 创建剧本
+ */
+const newScript = function (){
+  chapterInfo.value = {};
+  scriptRow.value = {
+    "name":"剧本名",
+    "info":"剧本信息",
+    "author":"作者",
+    "chapter":[
+      {
+        "name":"章节名",
+        "info":"章节信息",
+        "material":{
+          "roleList":[
+
+          ],
+          "backgroundList":[
+
+          ],
+          "musicList":{
+            "role":[
+
+            ],
+            "background":[
+
+            ],
+            "source":[
+
+            ]
+          }
+        },
+        "node":[
+          {
+            "id":"id",
+            "dialogue":{
+              "content":[
+
+              ]
+            },
+            "role":[
+
+            ],
+            "background":{
+
+            },
+            "music":{
+              "backgroundMusic":{
+
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+  sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
+  getChapterList()
+  message.success("保存成功")
 }
 
 
