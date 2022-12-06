@@ -99,7 +99,7 @@
                     </template>
                   </template>
                   <template #expandedRowRender="{ record }">
-                    <a-list size="small">
+                    <a-list size="small" v-show="record.dialogue.content.length>0">
                       <a-list-item>
                         <div style="width: 100%;display: flex;font-weight: bolder">
                           <div style="flex: 2">
@@ -136,6 +136,11 @@
                     </a-list>
                   </template>
                 </a-table>
+                <div style="text-align: right;margin-top: 20px">
+                  <a-button type="primary" @click="addNode">
+                    添加节点
+                  </a-button>
+                </div>
               </a-form>
             </a-tab-pane>
             <a-tab-pane key="2" force-render tab="素材">
@@ -402,6 +407,34 @@ const outputScript = async function () {
   a.click();
 }
 
+
+/**
+ * 添加节点
+ */
+const addNode = function(){
+  console.log(chapterInfo.value.node.push(
+      {
+        "id":"",
+        "dialogue":{
+          "content":[
+
+          ]
+        },
+        "role":[
+
+        ],
+        "background":{
+          "name":""
+        },
+        "music":{
+          "backgroundMusic":{
+            "name":""
+          }
+        }
+      }
+  ))
+}
+
 /**
  * 导出剧本和所有素材
  */
@@ -544,19 +577,6 @@ const newScript = function () {
             "source": []
           }
         },
-        "node": [
-          {
-            "id": "id",
-            "dialogue": {
-              "content": []
-            },
-            "role": [],
-            "background": {},
-            "music": {
-              "backgroundMusic": {}
-            }
-          }
-        ]
       }
     ]
   }
