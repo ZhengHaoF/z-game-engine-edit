@@ -144,13 +144,55 @@
               </a-form>
             </a-tab-pane>
             <a-tab-pane key="2" force-render tab="素材">
-              素材管理器
+              <a-tabs>
+                <a-tab-pane key="3" tab="背景素材">
+                  <a-card hoverable style="width: 240px" v-for="item in chapterInfo['material']['backgroundList']">
+                    <template #cover>
+                      <img alt="example" :src="item['src']" />
+                    </template>
+                    <a-card-meta :title="item['name']">
+                      <template #description>{{item['src']}}</template>
+                    </a-card-meta>
+                  </a-card>
+                </a-tab-pane>
+                <a-tab-pane key="4" tab="人物素材">
+                  <a-card hoverable style="width: 240px" v-for="item in chapterInfo['material']['roleList']">
+                    <template #cover>
+                      <img alt="example" :src="item['roleImg']" />
+                    </template>
+                    <a-card-meta :title="item['name']">
+                      <template #description>{{item['roleImg']}}</template>
+                    </a-card-meta>
+                  </a-card>
+                </a-tab-pane>
+                <a-tab-pane key="5" tab="语音素材">
+                  <div style="height: calc(100vh - 200px);overflow: hidden;overflow-y: scroll">
+                    <a-list>
+                      <a-list-item v-for="item in  chapterInfo['material']['musicList']['role']">
+                        <div style="flex: 10">
+                          <a-space>{{item['name']}}</a-space>
+                        </div>
+                        <div style="flex: 10">
+                          <a-space>{{item['src']}}</a-space>
+                        </div>
+                        <div style="flex: 4">
+                          <a-button shape="circle" type="primary" @click="playAudio(item.roleMusic)">
+                            <template #icon>
+                              <play-circle-outlined/>
+                            </template>
+                          </a-button>
+                        </div>
+                      </a-list-item>
+                    </a-list>
+                  </div>
+                </a-tab-pane>
+              </a-tabs>
             </a-tab-pane>
           </a-tabs>
         </div>
       </a-col>
     </a-row>
-    <a-modal v-model:visible="editModal" title="编辑节点" width="80%" @ok="editModal=false">
+    <a-modal wrap-class-name="full-modal" v-model:visible="editModal" title="编辑节点" width="100%" @ok="editModal=false">
       <a-form>
         <a-form-item label="背景图片">
           <a-select v-model:value="nodeRow.background.name" :filter-option="filterOption" show-search>
@@ -255,9 +297,9 @@
   </div>
 
 </template>
-
 <script lang="ts" setup>
 import {onMounted, Ref, ref} from "vue";
+import * as localforage from "localforage";
 import {
   MailOutlined,
   FormOutlined,
@@ -635,5 +677,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-
+.full-modal {
+  background-color: red;
+}
 </style>
