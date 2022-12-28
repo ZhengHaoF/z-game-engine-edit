@@ -17,7 +17,7 @@
         <a-menu-item key="2" @click="inputScript">打开剧本</a-menu-item>
         <a-menu-item key="3" @click="outputScript">导出剧本</a-menu-item>
         <a-menu-item key="4" @click="importSource">导入素材（测试）</a-menu-item>
-        <a-menu-item key="5" @click="getSource('/assets/backgroundImg/その他_プールA.png')">获取素材 （测试）</a-menu-item>
+        <a-menu-item key="5" @click="getSource('assets/resources/backgroundImg/その他_プールA.png')">获取素材 （测试）</a-menu-item>
         <a-menu-item key="6" @click="nodeTest">Node功能 （测试）</a-menu-item>
 
       </a-sub-menu>
@@ -152,7 +152,7 @@
                 <a-tab-pane key="3" tab="背景素材">
                   <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable style="width: 240px">
                     <template #cover>
-                      <img :src="item['src']" alt="example"/>
+                      <img :src="sourceList[item['src']]" :data-onload="getSource(item['src'])" alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
                       <template #description>{{ item['src'] }}</template>
@@ -162,7 +162,7 @@
                 <a-tab-pane key="4" tab="人物素材">
                   <a-card v-for="item in chapterInfo['material']['roleList']" hoverable style="width: 240px">
                     <template #cover>
-                      <img :src="item['roleImg']" alt="example"/>
+                      <img :src="sourceList[item['roleImg']]" :data-onload="getSource(item['roleImg'])" alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
                       <template #description>{{ item['roleImg'] }}</template>
@@ -378,6 +378,30 @@ const chapterInfo: Ref = ref({});
 const getChapterInfo = function (name) {
   chapterInfo.value = scriptRow.value.chapter.filter((item) => {
     if (item.name === name) {
+      sourceList.value = {};
+      //点击章节名后，提前加载好资源
+      for(let op of item['material']['backgroundList']){
+        //背景资源
+        sourceList.value[op['src']] = "";
+      }
+      for(let op of item['material']['roleList']){
+        //人物资源
+        sourceList.value[op['roleImg']] = "";
+        sourceList.value[op['headImg']] = "";
+      }
+
+      for(let op of item['material']['musicList']['role']){
+        //人物音乐资源
+        sourceList.value[op['roleImg']] = "";
+      }
+      for(let op of item['material']['musicList']['background']){
+        //背景音乐资源
+        sourceList.value[op['src']] = "";
+      }
+      for(let op of item['material']['musicList']['material']){
+        //音效音乐资源
+        sourceList.value[op['src']] = "";
+      }
       return true;
     }
   })[0]
@@ -484,7 +508,7 @@ const outputAll = async function () {
   let zip = new JSZip();
   zip.file("scriptRow.json", JSON.stringify(scriptRow.value));
   //资源文件夹
-  let assets = zip.folder("assets");
+  let assets = zip.folder("assets/resources");
   //背景图片文件夹
   let backgroundImg = assets.folder("backgroundImg");
   //头图文件夹
@@ -612,25 +636,27 @@ const importSource = function () {
         if (!zip['files'][fileName].dir) {
           //不是文件夹
           //以二进制的新式存储到indexDB中去
+          localforage.setItem(fileName, zip.file(fileName).async("blob"))
 
-          if (
-              fileName.indexOf("jpg") !== -1 ||
-              fileName.indexOf("png") !== -1 ||
-              fileName.indexOf("bmp") !== -1 ||
-              fileName.indexOf("webp") !== -1
-          ) {
-            //对于图片采用base64编码
-            localforage.setItem(fileName, zip.file(fileName).async("blob"))
-          } else if (
-              fileName.indexOf("txt") !== -1 ||
-              fileName.indexOf("json") !== -1
-          ) {
-            //对于文本直接读取
-            localforage.setItem(fileName, zip.file(fileName).async("blob"))
-          } else {
-            //不识别的直接跳过
-            return;
-          }
+
+          // if (
+          //     fileName.indexOf("jpg") !== -1 ||
+          //     fileName.indexOf("png") !== -1 ||
+          //     fileName.indexOf("bmp") !== -1 ||
+          //     fileName.indexOf("webp") !== -1
+          // ) {
+          //   //对于图片采用base64编码
+          //   localforage.setItem(fileName, zip.file(fileName).async("blob"))
+          // } else if (
+          //     fileName.indexOf("txt") !== -1 ||
+          //     fileName.indexOf("json") !== -1
+          // ) {
+          //   //对于文本直接读取
+          //   localforage.setItem(fileName, zip.file(fileName).async("blob"))
+          // } else {
+          //   //不识别的直接跳过
+          //   return;
+          // }
         } else {
 
         }
@@ -712,6 +738,7 @@ const delDialogue = function (index) {
   nodeRow.value.dialogue.content.splice(index, 1)
 }
 
+let sourceList = ref({})
 /**
  * 调用获取存储在indexDB中的资源
  * @param sourceSrc
@@ -739,10 +766,11 @@ const getSource = async function (sourceSrc) {
   }
 
   reader.onload = function (e) {
-    console.log(e.target.result)
+    sourceList.value[sourceSrc] = e.target.result
     return e.target.result
   }
 }
+
 
 /**
  * node功能测试
