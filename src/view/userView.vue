@@ -17,8 +17,7 @@
         <a-menu-item key="2" @click="inputScript">打开剧本</a-menu-item>
         <a-menu-item key="3" @click="outputScript">导出剧本</a-menu-item>
         <a-menu-item key="4" @click="importSource">导入素材（测试）</a-menu-item>
-        <a-menu-item key="5" @click="getSource('assets/resources/backgroundImg/その他_プールA.png')">获取素材 （测试）</a-menu-item>
-        <a-menu-item key="6" @click="nodeTest">Node功能 （测试）</a-menu-item>
+        <a-menu-item key="5" @click="nodeTest">Node功能 （测试）</a-menu-item>
 
       </a-sub-menu>
       <a-sub-menu key="material">
@@ -152,7 +151,7 @@
                 <a-tab-pane key="3" tab="背景素材">
                   <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable style="width: 240px">
                     <template #cover>
-                      <img :src="sourceList[item['src']]" :data-onload="getSource(item['src'])" alt="example"/>
+                      <img :src="sourceList[item['src']]" :data-onload="setSourceBase64(item['src'])" alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
                       <template #description>{{ item['src'] }}</template>
@@ -162,7 +161,7 @@
                 <a-tab-pane key="4" tab="人物素材">
                   <a-card v-for="item in chapterInfo['material']['roleList']" hoverable style="width: 240px">
                     <template #cover>
-                      <img :src="sourceList[item['roleImg']]" :data-onload="getSource(item['roleImg'])" alt="example"/>
+                      <img :src="sourceList[item['roleImg']]" :data-onload="setSourceBase64(item['roleImg'])" alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
                       <template #description>{{ item['roleImg'] }}</template>
@@ -180,7 +179,7 @@
                           <a-space>{{ item['src'] }}</a-space>
                         </div>
                         <div style="flex: 4">
-                          <a-button shape="circle" type="primary" @click="playAudio(item.roleMusic)">
+                          <a-button shape="circle" type="primary" @click="playAudio(item['src'])">
                             <template #icon>
                               <play-circle-outlined/>
                             </template>
@@ -445,12 +444,11 @@ const playAudioInfo = ref(new Audio());
  * @param name 音乐名
  */
 const playAudio = function (name) {
-  let audioInfo = getRoleAudio(name);
-  if (audioInfo['src']) {
-    playAudioInfo.value.pause();
-    playAudioInfo.value.src = audioInfo.src;
-    playAudioInfo.value.play();
-  }
+   getSource(name).then((res)=>{
+       playAudioInfo.value.pause();
+       playAudioInfo.value.src = URL.createObjectURL(res);
+       playAudioInfo.value.play();
+  })
 
 }
 
@@ -553,33 +551,37 @@ const outputAll = async function () {
   }
 
   for (const item of headImgList) {
-    await axios.get(item, {responseType: "blob"}).then((res) => {
-      zip.file(item, res.data, {optimizedBinaryString: true})
+    // await axios.get(item, {responseType: "blob"}).then((res) => {
+    //   zip.file(item, res.data, {optimizedBinaryString: true})
+    // })
+   await getSource(item).then((res) => {
+      zip.file(item, res, {optimizedBinaryString: true})
     })
+
   }
   for (const item of roleImgList) {
-    await axios.get(item, {responseType: "blob"}).then((res) => {
-      zip.file(item, res.data, {optimizedBinaryString: true})
+    await getSource(item).then((res) => {
+      zip.file(item, res, {optimizedBinaryString: true})
     })
   }
   for (const item of backgroundList) {
-    await axios.get(item, {responseType: "blob"}).then((res) => {
-      zip.file(item, res.data, {optimizedBinaryString: true})
+    await getSource(item).then((res) => {
+      zip.file(item, res, {optimizedBinaryString: true})
     })
   }
   for (const item of musicListRole) {
-    await axios.get(item, {responseType: "blob"}).then((res) => {
-      zip.file(item, res.data, {optimizedBinaryString: true})
+    await getSource(item).then((res) => {
+      zip.file(item, res, {optimizedBinaryString: true})
     })
   }
   for (const item of musicListBackground) {
-    await axios.get(item, {responseType: "blob"}).then((res) => {
-      zip.file(item, res.data, {optimizedBinaryString: true})
+    await getSource(item).then((res) => {
+      zip.file(item, res, {optimizedBinaryString: true})
     })
   }
   for (const item of musicListMaterial) {
-    await axios.get(item, {responseType: "blob"}).then((res) => {
-      zip.file(item, res.data, {optimizedBinaryString: true})
+    await getSource(item).then((res) => {
+      zip.file(item, res, {optimizedBinaryString: true})
     })
   }
 
@@ -680,7 +682,6 @@ const importSource = function () {
         }
       }
     })
-    // console.log(getSource("scriptRow.json"))
   }
 }
 
@@ -738,37 +739,32 @@ const delDialogue = function (index) {
   nodeRow.value.dialogue.content.splice(index, 1)
 }
 
-let sourceList = ref({})
 /**
  * 调用获取存储在indexDB中的资源
  * @param sourceSrc
  */
-const getSource = async function (sourceSrc) {
-  let sourceBlob = await localforage.getItem(sourceSrc)
-  let reader = new FileReader();
-  if (
-      sourceSrc.indexOf("jpg") !== -1 ||
-      sourceSrc.indexOf("png") !== -1 ||
-      sourceSrc.indexOf("bmp") !== -1 ||
-      sourceSrc.indexOf("webp") !== -1
-  ) {
-    //对于图片采用base64编码
-    reader.readAsDataURL(<Blob>sourceBlob)
-  } else if (
-      sourceSrc.indexOf("txt") !== -1 ||
-      sourceSrc.indexOf("json") !== -1
-  ) {
-    //对于文本直接读取
-    reader.readAsText(<Blob>sourceBlob);
-  } else {
-    //不识别的直接跳过
-    return;
-  }
+const getSource:any =  function (sourceSrc) {
+  return new Promise((resolve, reject)=>{
+    localforage.getItem(sourceSrc).then((sourceBlob)=> {
+      resolve(sourceBlob)
+    });
+  })
+}
 
-  reader.onload = function (e) {
-    sourceList.value[sourceSrc] = e.target.result
-    return e.target.result
-  }
+let sourceList = ref({})
+/**
+ * 设置图片Base64
+ * @param sourceSrc 资源名称
+ */
+let setSourceBase64 = function (sourceSrc) {
+    getSource(sourceSrc).then((res)=>{
+      //读取二进制对象
+      let reader = new FileReader();
+      reader.readAsDataURL(<Blob>res)
+      reader.onload = function (e) {
+        sourceList.value[sourceSrc] = e.target.result
+      }
+    })
 }
 
 
