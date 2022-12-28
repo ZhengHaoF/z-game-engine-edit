@@ -16,8 +16,7 @@
         <a-menu-item key="1" @click="newScript">创建剧本</a-menu-item>
         <a-menu-item key="2" @click="inputScript">打开剧本</a-menu-item>
         <a-menu-item key="3" @click="outputScript">导出剧本</a-menu-item>
-        <a-menu-item key="4" @click="importSource">导入素材（测试）</a-menu-item>
-        <a-menu-item key="5" @click="nodeTest">Node功能 （测试）</a-menu-item>
+        <a-menu-item key="4" @click="importSource">导入素材</a-menu-item>
 
       </a-sub-menu>
       <a-sub-menu key="material">
@@ -86,7 +85,7 @@
                     </template>
                     <template v-if="column.key === 'backgroundMusic'">
                       {{ record.music.backgroundMusic.name }}
-                      <a-button shape="circle" type="primary" @click="playAudio(record.music.backgroundMusic.name)">
+                      <a-button shape="circle" type="primary" @click="playAudio(getRoleAudio(record.music.backgroundMusic.name)['src'])">
                         <template #icon>
                           <play-circle-outlined/>
                         </template>
@@ -128,7 +127,7 @@
                             <a-space> {{ item.roleMusic }}</a-space>
                           </div>
                           <div style="flex: 2">
-                            <a-button shape="circle" type="primary" @click="playAudio(item.roleMusic)">
+                            <a-button shape="circle" type="primary" @click="playAudio(getRoleAudio(item.roleMusic)['src'])">
                               <template #icon>
                                 <play-circle-outlined/>
                               </template>
@@ -767,20 +766,6 @@ let setSourceBase64 = function (sourceSrc) {
     })
 }
 
-
-/**
- * node功能测试
- */
-const nodeTest = function (){
-  let fs = nw.require('fs');
-  fs.readFile("package.json", 'utf8', function(err, txt) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    console.log(txt);
-  });
-}
 
 /**
  * 智能匹配
