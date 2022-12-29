@@ -150,17 +150,18 @@
                 <a-tab-pane key="3" tab="背景素材">
                   <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable style="width: 240px">
                     <template #cover>
-                      <img :src="sourceList[item['src']]" :data-onload="setSourceBase64(item['src'])" alt="example"/>
+                      <img :src="sourceList[item['src']]" :data-onload="setSourceURL(item['src'])" alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
                       <template #description>{{ item['src'] }}</template>
                     </a-card-meta>
                   </a-card>
+                  <a-button style="position: absolute;right: 20px;bottom: 0px">添加素材</a-button>
                 </a-tab-pane>
                 <a-tab-pane key="4" tab="人物素材">
                   <a-card v-for="item in chapterInfo['material']['roleList']" hoverable style="width: 240px">
                     <template #cover>
-                      <img :src="sourceList[item['roleImg']]" :data-onload="setSourceBase64(item['roleImg'])" alt="example"/>
+                      <img :src="sourceList[item['roleImg']]" :data-onload="setSourceURL(item['roleImg'])" alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
                       <template #description>{{ item['roleImg'] }}</template>
@@ -755,7 +756,10 @@ let sourceList = ref({})
  * 设置图片Base64
  * @param sourceSrc 资源名称
  */
-let setSourceBase64 = function (sourceSrc) {
+let setSourceURL = function (sourceSrc) {
+  if(sourceList.value[sourceSrc] !== ""){
+    return;
+  }
     getSource(sourceSrc).then((res)=>{
       //读取二进制对象
       sourceList.value[sourceSrc] = URL.createObjectURL(res)
