@@ -758,11 +758,7 @@ let sourceList = ref({})
 let setSourceBase64 = function (sourceSrc) {
     getSource(sourceSrc).then((res)=>{
       //读取二进制对象
-      let reader = new FileReader();
-      reader.readAsDataURL(<Blob>res)
-      reader.onload = function (e) {
-        sourceList.value[sourceSrc] = e.target.result
-      }
+      sourceList.value[sourceSrc] = URL.createObjectURL(res)
     })
 }
 
