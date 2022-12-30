@@ -148,7 +148,7 @@
             <a-tab-pane key="2" force-render tab="素材">
               <a-tabs>
                 <a-tab-pane key="3" tab="背景素材">
-                  <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable style="width: 240px">
+                  <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable style="width: 240px;float: left;margin: 20px">
                     <template #cover>
                       <img :src="sourceList[item['src']]" :data-onload="setSourceURL(item['src'])" alt="example"/>
                     </template>
@@ -156,10 +156,10 @@
                       <template #description>{{ item['src'] }}</template>
                     </a-card-meta>
                   </a-card>
-                  <a-button style="position: absolute;right: 20px;bottom: 0px">添加素材</a-button>
+                  <a-button type="primary" style="position: absolute;right: 40px;bottom: 0" @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材</a-button>
                 </a-tab-pane>
                 <a-tab-pane key="4" tab="人物素材">
-                  <a-card v-for="item in chapterInfo['material']['roleList']" hoverable style="width: 240px">
+                  <a-card v-for="item in chapterInfo['material']['roleList']" hoverable style="width: 240px;float: left;margin: 20px">
                     <template #cover>
                       <img :src="sourceList[item['roleImg']]" :data-onload="setSourceURL(item['roleImg'])" alt="example"/>
                     </template>
@@ -294,6 +294,20 @@
           <div style="padding-top: 10px">
             <a-button type="primary" @click="addDialogue">添加</a-button>
           </div>
+        </a-form-item>
+      </a-form>
+    </a-modal>
+    <a-modal
+      title="添加资源"
+      v-model:visible="addSourceShow"
+      @ok="addSource(nowSourceName)"
+    >
+      <a-form>
+        <a-form-item label="名称">
+          <a-input type="text" v-model:value="nowFileName"></a-input>
+        </a-form-item>
+        <a-form-item label="文件">
+          <a-input type="file" id="nowFile" accept="image/*"></a-input>
         </a-form-item>
       </a-form>
     </a-modal>
@@ -604,7 +618,6 @@ const inputScript = function () {
   file.type = "file";
   file.click();
   file.onchange = function () {
-    console.log(file.files[0])
     let reader = new FileReader();
     reader.readAsText(file.files[0]);//发起异步请求
     reader.onload = function (e) {
@@ -772,6 +785,65 @@ let setSourceURL = function (sourceSrc) {
  */
 const aiMatching = function () {
 
+}
+
+//添加素材是否显示
+let addSourceShow = ref(false)
+//当前添加的类名
+let nowSourceName = ref("");
+//文件名
+let nowFileName = ref("");
+/**
+ * 添加素材
+ */
+const addSource = function (type){
+  console.log(type)
+  let file = document.getElementById("nowFile") as HTMLElement
+  if(file.files.length > 0){
+    let reader = new FileReader();
+    reader.readAsArrayBuffer(file.files[0]);//发起异步请求
+    reader.onload = function (e) {
+      //读取完成后，数据保存在对象的result属性中
+      try {
+        let path = ""
+        if(type === "backgroundImg"){
+          //背景图
+          path = "assets/resources/backgroundImg/"
+          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+          chapterInfo.value['material']['backgroundList'].push({
+            "name":nowFileName,
+            "src":path + file.files[0].name
+          })
+          console.log(chapterInfo.value)
+        }else if(type === "roleImg"){
+          //头图
+          path = "assets/resources/roleImg/"
+          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+
+        }else if(type === "roleMusic"){
+          //人物音乐
+          path = "assets/resources/music/roleMusic/"
+          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+
+        }else if(type === "backgroundMusic"){
+          //背景音乐
+          path = "assets/resources/music/backgroundMusic/"
+          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+
+        }else if(type === "headImg"){
+          //头图
+          path = "assets/resources/headImg/"
+          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+
+        }
+        message.success("添加成功")
+      } catch (e) {
+        message.error("导入失败", e.message)
+      }
+    }
+  }else {
+    message.warning("你还没有选择文件")
+  }
 }
 
 
