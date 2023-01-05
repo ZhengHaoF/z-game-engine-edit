@@ -85,7 +85,8 @@
                     </template>
                     <template v-if="column.key === 'backgroundMusic'">
                       {{ record.music.backgroundMusic.name }}
-                      <a-button shape="circle" type="primary" @click="playAudio(getRoleAudio(record.music.backgroundMusic.name)['src'])">
+                      <a-button shape="circle" type="primary"
+                                @click="playAudio(getRoleAudio(record.music.backgroundMusic.name)['src'])">
                         <template #icon>
                           <play-circle-outlined/>
                         </template>
@@ -127,7 +128,8 @@
                             <a-space> {{ item.roleMusic }}</a-space>
                           </div>
                           <div style="flex: 2">
-                            <a-button shape="circle" type="primary" @click="playAudio(getRoleAudio(item.roleMusic)['src'])">
+                            <a-button shape="circle" type="primary"
+                                      @click="playAudio(getRoleAudio(item.roleMusic)['src'])">
                               <template #icon>
                                 <play-circle-outlined/>
                               </template>
@@ -148,20 +150,35 @@
             <a-tab-pane key="2" force-render tab="素材">
               <a-tabs>
                 <a-tab-pane key="3" tab="背景素材">
-                  <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable style="width: 240px;float: left;margin: 20px">
+                  <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable
+                          style="width: 240px;float: left;margin: 20px">
                     <template #cover>
-                      <img :src="sourceList[item['src']]" :data-onload="setSourceURL(item['src'])" alt="example"/>
+                      <img :data-onload="setSourceURL(item['src'])" :src="sourceList[item['src']]" alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
-                      <template #description>{{ item['src'] }}</template>
+                      <template #description>
+                        {{ item['src'] }}
+                        <br>
+                        <div style="text-align: right">
+                          <a-button danger shape="circle" type="primary" @click="deleteSource(item['src'])">
+                            <template #icon>
+                              <DeleteOutlined/>
+                            </template>
+                          </a-button>
+                        </div>
+                      </template>
                     </a-card-meta>
                   </a-card>
-                  <a-button type="primary" style="position: absolute;right: 40px;bottom: 0" @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材</a-button>
+                  <a-button style="position: absolute;right: 40px;bottom: 0" type="primary"
+                            @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材
+                  </a-button>
                 </a-tab-pane>
                 <a-tab-pane key="4" tab="人物素材">
-                  <a-card v-for="item in chapterInfo['material']['roleList']" hoverable style="width: 240px;float: left;margin: 20px">
+                  <a-card v-for="item in chapterInfo['material']['roleList']" hoverable
+                          style="width: 240px;float: left;margin: 20px">
                     <template #cover>
-                      <img :src="sourceList[item['roleImg']]" :data-onload="setSourceURL(item['roleImg'])" alt="example"/>
+                      <img :data-onload="setSourceURL(item['roleImg'])" :src="sourceList[item['roleImg']]"
+                           alt="example"/>
                     </template>
                     <a-card-meta :title="item['name']">
                       <template #description>{{ item['roleImg'] }}</template>
@@ -298,16 +315,19 @@
       </a-form>
     </a-modal>
     <a-modal
-      title="添加资源"
-      v-model:visible="addSourceShow"
-      @ok="addSource(nowSourceName)"
+        v-model:visible="addSourceShow"
+        title="添加资源"
+        @ok="addSource(nowSourceName)"
     >
       <a-form>
         <a-form-item label="名称">
-          <a-input type="text" v-model:value="nowFileName"></a-input>
+          <a-input v-model:value="nowFileName" type="text"></a-input>
         </a-form-item>
         <a-form-item label="文件">
-          <a-input type="file" id="nowFile" accept="image/*"></a-input>
+          <a-input id="nowFile" accept="image/*" type="file"></a-input>
+        </a-form-item>
+        <a-form-item v-show="nowSourceName === 'roleImg' || nowSourceName === 'headImg'" label="角色名">
+
         </a-form-item>
       </a-form>
     </a-modal>
@@ -393,25 +413,25 @@ const getChapterInfo = function (name) {
     if (item.name === name) {
       sourceList.value = {};
       //点击章节名后，提前加载好资源
-      for(let op of item['material']['backgroundList']){
+      for (let op of item['material']['backgroundList']) {
         //背景资源
         sourceList.value[op['src']] = "";
       }
-      for(let op of item['material']['roleList']){
+      for (let op of item['material']['roleList']) {
         //人物资源
         sourceList.value[op['roleImg']] = "";
         sourceList.value[op['headImg']] = "";
       }
 
-      for(let op of item['material']['musicList']['role']){
+      for (let op of item['material']['musicList']['role']) {
         //人物音乐资源
         sourceList.value[op['roleImg']] = "";
       }
-      for(let op of item['material']['musicList']['background']){
+      for (let op of item['material']['musicList']['background']) {
         //背景音乐资源
         sourceList.value[op['src']] = "";
       }
-      for(let op of item['material']['musicList']['material']){
+      for (let op of item['material']['musicList']['material']) {
         //音效音乐资源
         sourceList.value[op['src']] = "";
       }
@@ -458,10 +478,10 @@ const playAudioInfo = ref(new Audio());
  * @param name 音乐名
  */
 const playAudio = function (name) {
-   getSource(name).then((res)=>{
-       playAudioInfo.value.pause();
-       playAudioInfo.value.src = URL.createObjectURL(res);
-       playAudioInfo.value.play();
+  getSource(name).then((res) => {
+    playAudioInfo.value.pause();
+    playAudioInfo.value.src = URL.createObjectURL(res);
+    playAudioInfo.value.play();
   })
 
 }
@@ -568,7 +588,7 @@ const outputAll = async function () {
     // await axios.get(item, {responseType: "blob"}).then((res) => {
     //   zip.file(item, res.data, {optimizedBinaryString: true})
     // })
-   await getSource(item).then((res) => {
+    await getSource(item).then((res) => {
       zip.file(item, res, {optimizedBinaryString: true})
     })
 
@@ -689,6 +709,8 @@ const importSource = function () {
             scriptRow.value = JSON.parse(e.target.result);
             message.success("导入成功")
             getChapterList();
+            //保存起来
+            sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
           }
         } catch (e) {
           message.error("导入失败", e.message)
@@ -756,9 +778,9 @@ const delDialogue = function (index) {
  * 调用获取存储在indexDB中的资源
  * @param sourceSrc
  */
-const getSource:any =  function (sourceSrc) {
-  return new Promise((resolve, reject)=>{
-    localforage.getItem(sourceSrc).then((sourceBlob)=> {
+const getSource: any = function (sourceSrc) {
+  return new Promise((resolve, reject) => {
+    localforage.getItem(sourceSrc).then((sourceBlob) => {
       resolve(sourceBlob)
     });
   })
@@ -770,13 +792,14 @@ let sourceList = ref({})
  * @param sourceSrc 资源名称
  */
 let setSourceURL = function (sourceSrc) {
-  if(sourceList.value[sourceSrc] !== ""){
+  if (sourceList.value[sourceSrc] !== "") {
     return;
   }
-    getSource(sourceSrc).then((res)=>{
-      //读取二进制对象
-      sourceList.value[sourceSrc] = URL.createObjectURL(res)
-    })
+  getSource(sourceSrc).then((res) => {
+    //读取二进制对象
+    sourceList.value[sourceSrc] = URL.createObjectURL(res)
+    console.log(sourceList.value[sourceSrc])
+  })
 }
 
 
@@ -796,56 +819,67 @@ let nowFileName = ref("");
 /**
  * 添加素材
  */
-const addSource = function (type){
+const addSource = function (type) {
   console.log(type)
   let file = document.getElementById("nowFile") as HTMLElement
-  if(file.files.length > 0){
+  if (file.files.length > 0) {
     let reader = new FileReader();
     reader.readAsArrayBuffer(file.files[0]);//发起异步请求
     reader.onload = function (e) {
       //读取完成后，数据保存在对象的result属性中
       try {
         let path = ""
-        if(type === "backgroundImg"){
+        if (type === "backgroundImg") {
           //背景图
           path = "assets/resources/backgroundImg/"
-          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
+          let sourceSrc = path + file.files[0].name
           chapterInfo.value['material']['backgroundList'].push({
-            "name":nowFileName,
-            "src":path + file.files[0].name
+            "name": nowFileName,
+            "src": sourceSrc
           })
-          console.log(chapterInfo.value)
-        }else if(type === "roleImg"){
+          sourceList.value[sourceSrc] = ""
+          setSourceURL(sourceSrc)
+        } else if (type === "roleImg") {
           //头图
           path = "assets/resources/roleImg/"
-          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
 
-        }else if(type === "roleMusic"){
+        } else if (type === "roleMusic") {
           //人物音乐
           path = "assets/resources/music/roleMusic/"
-          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
 
-        }else if(type === "backgroundMusic"){
+        } else if (type === "backgroundMusic") {
           //背景音乐
           path = "assets/resources/music/backgroundMusic/"
-          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
 
-        }else if(type === "headImg"){
+        } else if (type === "headImg") {
           //头图
           path = "assets/resources/headImg/"
-          localforage.setItem(path + file.files[0].name,new Blob([e.target.result]))
+          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
 
         }
         message.success("添加成功")
+        addSourceShow.value = false;
       } catch (e) {
         message.error("导入失败", e.message)
       }
     }
-  }else {
+  } else {
     message.warning("你还没有选择文件")
   }
 }
 
+/**
+ * 删除资源
+ */
+const deleteSource = function (sourceName) {
+  console.log(sourceName)
+  sessionStorage.removeItem(sourceName)
+
+}
 
 onMounted(() => {
   if (sessionStorage.getItem("scriptRow") !== null) {
