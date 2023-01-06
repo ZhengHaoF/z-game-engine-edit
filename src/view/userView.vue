@@ -14,9 +14,9 @@
         </template>
         <template #title>剧本（edit）</template>
         <a-menu-item key="1" @click="newScript">创建剧本</a-menu-item>
-        <a-menu-item key="2" @click="inputScript">打开剧本</a-menu-item>
-        <a-menu-item key="3" @click="outputScript">导出剧本</a-menu-item>
+<!--        <a-menu-item key="2" @click="inputScript">打开剧本</a-menu-item>-->
         <a-menu-item key="4" @click="importSource">导入素材</a-menu-item>
+        <a-menu-item key="3" @click="outputScript">导出剧本</a-menu-item>
 
       </a-sub-menu>
       <a-sub-menu key="material">
@@ -320,6 +320,7 @@
         @ok="addSource(nowSourceName)"
     >
       <a-form>
+
         <a-form-item label="名称">
           <a-input v-model:value="nowFileName" type="text"></a-input>
         </a-form-item>
