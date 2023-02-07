@@ -746,22 +746,23 @@ const importSource = function () {
 const newScript = function () {
   chapterInfo.value = {};
   scriptRow.value = {
-    "name": "剧本名",
-    "info": "剧本信息",
-    "author": "作者",
+    "name": "测试剧本",
+    "info": "",
+    "author": "",
     "chapter": [
       {
-        "name": "章节名",
-        "info": "章节信息",
+        "name": "第一章",
+        "info": "",
         "material": {
           "roleList": [],
           "backgroundList": [],
           "musicList": {
             "role": [],
             "background": [],
-            "source": []
+            "material": []
           }
         },
+        "node": []
       }
     ]
   }
