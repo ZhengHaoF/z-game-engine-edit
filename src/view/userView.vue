@@ -150,26 +150,29 @@
             <a-tab-pane key="2" force-render tab="素材">
               <a-tabs>
                 <a-tab-pane key="3" tab="背景素材">
-                  <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable
-                          style="width: 240px;float: left;margin: 20px">
-                    <template #cover>
-                      <img :data-onload="setSourceURL(item['src'])" :src="sourceList[item['src']]" alt="example"/>
-                    </template>
-                    <a-card-meta :title="item['name']">
-                      <template #description>
-                        {{ item['src'] }}
-                        <br>
-                        <div style="text-align: right">
-                          <a-button danger shape="circle" type="primary" @click="deleteSource(item['src'])">
-                            <template #icon>
-                              <DeleteOutlined/>
-                            </template>
-                          </a-button>
-                        </div>
+                  <div style="height: calc(100vh - 250px);overflow-y: scroll;overflow-x:hidden;width: 100%">
+                    <a-card v-for="item in chapterInfo['material']['backgroundList']" hoverable
+                            style="width: 240px;margin: 20px; float: left;height: 300px">
+                      <template #cover>
+                        <img @click="test(sourceList[item['src']])" :data-onload="setSourceURL(item['src'])" :src="sourceList[item['src']]" alt="example"/>
                       </template>
-                    </a-card-meta>
-                  </a-card>
-                  <a-button style="position: absolute;right: 40px;bottom: 0" type="primary"
+                      <a-card-meta :title="item['name']">
+                        <template #description>
+                          {{ item['src'] }}
+                          <br>
+                          <div style="text-align: right">
+                            <a-button danger shape="circle" type="primary" @click="deleteSource(item['src'])">
+                              <template #icon>
+                                <DeleteOutlined/>
+                              </template>
+                            </a-button>
+                          </div>
+                        </template>
+                      </a-card-meta>
+                    </a-card>
+
+                  </div>
+                  <a-button style="position: fixed;right: 40px;bottom: 20px" type="primary"
                             @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材
                   </a-button>
                 </a-tab-pane>
@@ -184,9 +187,12 @@
                       <template #description>{{ item['roleImg'] }}</template>
                     </a-card-meta>
                   </a-card>
+                  <a-button style="position: fixed;right: 40px;bottom: 20px" type="primary"
+                            @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材
+                  </a-button>
                 </a-tab-pane>
                 <a-tab-pane key="5" tab="语音素材">
-                  <div style="height: calc(100vh - 200px);overflow: hidden;overflow-y: scroll">
+                  <div style="height: calc(100vh - 260px);overflow: hidden;overflow-y: scroll">
                     <a-list>
                       <a-list-item v-for="item in  chapterInfo['material']['musicList']['role']">
                         <div style="flex: 10">
@@ -205,6 +211,9 @@
                       </a-list-item>
                     </a-list>
                   </div>
+                  <a-button style="position: fixed;right: 40px;bottom: 20px" type="primary"
+                            @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材
+                  </a-button>
                 </a-tab-pane>
               </a-tabs>
             </a-tab-pane>
@@ -332,6 +341,9 @@
         </a-form-item>
       </a-form>
     </a-modal>
+    <a-modal v-model:visible="showBigImage" title="查看图片">
+      <a-image :src="bigImageUrl"></a-image>
+    </a-modal>
   </div>
 
 </template>
@@ -350,6 +362,13 @@ import {
 import {message} from 'ant-design-vue';
 import JSZip from "jszip";
 import axios from "axios";
+
+let showBigImage = ref(false);
+let bigImageUrl = ref("")
+const test = function (imgUrl){
+  showBigImage.value = true;
+  bigImageUrl.value = imgUrl;
+}
 
 const editModal = ref(false)
 const columns = [
@@ -833,14 +852,16 @@ const addSource = function (type) {
         if (type === "backgroundImg") {
           //背景图
           path = "assets/resources/backgroundImg/"
-          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
           let sourceSrc = path + file.files[0].name
+          localforage.setItem(sourceSrc, new Blob([e.target.result]))
           chapterInfo.value['material']['backgroundList'].push({
             "name": nowFileName,
             "src": sourceSrc
           })
           sourceList.value[sourceSrc] = ""
           setSourceURL(sourceSrc)
+          sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
+          message.success("保存成功")
         } else if (type === "roleImg") {
           //头图
           path = "assets/resources/roleImg/"
