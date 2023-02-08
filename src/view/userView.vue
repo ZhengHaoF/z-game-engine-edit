@@ -906,8 +906,17 @@ const addSource = function (type) {
  */
 const deleteSource = function (sourceName) {
   console.log(sourceName)
-  sessionStorage.removeItem(sourceName)
-
+  localforage.removeItem(sourceName).then(()=>{
+    chapterInfo.value['material']['backgroundList'].forEach((item,index)=>{
+      if (item['src'] ===  String(sourceName)){
+        console.log(chapterInfo.value['material']['backgroundList'].splice(index,1));
+        //保存剧本
+        sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
+        message.success("删除成功")
+        return;
+      }
+    })
+  })
 }
 
 onMounted(() => {
