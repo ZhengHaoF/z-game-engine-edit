@@ -852,11 +852,16 @@ const addSource = function (type) {
         let path = ""
         if (type === "backgroundImg") {
           //背景图
+          chapterInfo.value['material']['backgroundList'].forEach((item)=>{
+            if (item['name'] ===  String(nowFileName.value)){
+              throw new Error("存在同名文件")
+            }
+          })
           path = "assets/resources/backgroundImg/"
           let sourceSrc = path + file.files[0].name
           localforage.setItem(sourceSrc, new Blob([e.target.result]))
           chapterInfo.value['material']['backgroundList'].push({
-            "name": nowFileName,
+            "name": String(nowFileName.value),
             "src": sourceSrc
           })
           sourceList.value[sourceSrc] = ""
@@ -884,10 +889,9 @@ const addSource = function (type) {
           localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
 
         }
-        message.success("添加成功")
         addSourceShow.value = false;
       } catch (e) {
-        message.error("导入失败", e.message)
+        message.error(e.toString())
       }
     }
   } else {
