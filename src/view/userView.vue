@@ -859,13 +859,15 @@ const addSource = function (type) {
           })
           path = "assets/resources/backgroundImg/"
           let sourceSrc = path + file.files[0].name
-          localforage.setItem(sourceSrc, new Blob([e.target.result]))
-          chapterInfo.value['material']['backgroundList'].push({
-            "name": String(nowFileName.value),
-            "src": sourceSrc
+          localforage.setItem(sourceSrc, new Blob([e.target.result])).then(()=>{
+            sourceList.value[sourceSrc] = ""
+            setSourceURL(sourceSrc)
+            chapterInfo.value['material']['backgroundList'].push({
+              "name": String(nowFileName.value),
+              "src": sourceSrc
+            })
           })
-          sourceList.value[sourceSrc] = ""
-          setSourceURL(sourceSrc)
+
           sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
           message.success("保存成功")
         } else if (type === "roleImg") {
