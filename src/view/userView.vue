@@ -161,7 +161,7 @@
                           {{ item['src'] }}
                           <br>
                           <div style="text-align: right">
-                            <a-button danger shape="circle" type="primary" @click="deleteSource(item['src'])">
+                            <a-button danger shape="circle" type="primary" @click="deleteSource(item['src'],'backgroundImg')">
                               <template #icon>
                                 <DeleteOutlined/>
                               </template>
@@ -191,7 +191,7 @@
                             @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材
                   </a-button>
                 </a-tab-pane>
-                <a-tab-pane key="5" tab="语音素材">
+                <a-tab-pane key="5" tab="人物语音">
                   <div style="height: calc(100vh - 260px);overflow: hidden;overflow-y: scroll">
                     <a-list>
                       <a-list-item v-for="item in  chapterInfo['material']['musicList']['role']">
@@ -212,9 +212,34 @@
                     </a-list>
                   </div>
                   <a-button style="position: fixed;right: 40px;bottom: 20px" type="primary"
-                            @click="addSourceShow = true;nowSourceName = 'backgroundImg'">添加素材
+                            @click="addSourceShow = true;nowSourceName = 'roleMusic'">添加素材
                   </a-button>
                 </a-tab-pane>
+                <a-tab-pane key="6" tab="背景音乐">
+                  <div style="height: calc(100vh - 260px);overflow: hidden;overflow-y: scroll">
+                    <a-list>
+                      <a-list-item v-for="item in  chapterInfo['material']['musicList']['background']">
+                        <div style="flex: 10">
+                          <a-space>{{ item['name'] }}</a-space>
+                        </div>
+                        <div style="flex: 10">
+                          <a-space>{{ item['src'] }}</a-space>
+                        </div>
+                        <div style="flex: 4">
+                          <a-button shape="circle" type="primary" @click="playAudio(item['src'])">
+                            <template #icon>
+                              <play-circle-outlined/>
+                            </template>
+                          </a-button>
+                        </div>
+                      </a-list-item>
+                    </a-list>
+                  </div>
+                  <a-button style="position: fixed;right: 40px;bottom: 20px" type="primary"
+                            @click="addSourceShow = true;nowSourceName = 'backgroundMusic'">添加素材
+                  </a-button>
+                </a-tab-pane>
+
               </a-tabs>
             </a-tab-pane>
           </a-tabs>
@@ -841,7 +866,6 @@ let nowFileName = ref("");
  * 添加素材
  */
 const addSource = function (type) {
-  console.log(type)
   let file = document.getElementById("nowFile") as HTMLElement
   if (file.files.length > 0) {
     let reader = new FileReader();
@@ -850,47 +874,64 @@ const addSource = function (type) {
       //读取完成后，数据保存在对象的result属性中
       try {
         let path = ""
+        let jsonPath = null;
+        let pushJson = null;
+        let sourceSrc = "";
         if (type === "backgroundImg") {
           //背景图
-          chapterInfo.value['material']['backgroundList'].forEach((item)=>{
-            if (item['name'] ===  String(nowFileName.value)){
-              throw new Error("存在同名文件")
-            }
-          })
+          jsonPath = chapterInfo.value['material']['backgroundList'];
           path = "assets/resources/backgroundImg/"
-          let sourceSrc = path + file.files[0].name
-          localforage.setItem(sourceSrc, new Blob([e.target.result])).then(()=>{
-            sourceList.value[sourceSrc] = ""
-            setSourceURL(sourceSrc)
-            chapterInfo.value['material']['backgroundList'].push({
-              "name": String(nowFileName.value),
-              "src": sourceSrc
-            })
-          })
-
-          sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
-          message.success("保存成功")
+          sourceSrc =  path + file.files[0].name
+          pushJson = {
+            "name": String(nowFileName.value),
+            "src": sourceSrc
+          }
         } else if (type === "roleImg") {
-          //头图
+          //人物图
+          jsonPath = chapterInfo.value['material']['roleList'];
           path = "assets/resources/roleImg/"
-          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
-
+          sourceSrc =  path + file.files[0].name
+          pushJson = {
+            "name": String(nowFileName.value),
+            "src": sourceSrc
+          }
         } else if (type === "roleMusic") {
-          //人物音乐
+          //人物语音
           path = "assets/resources/music/roleMusic/"
-          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
-
+          sourceSrc =  path + file.files[0].name
+          jsonPath = chapterInfo.value['material']['musicList']['role'];
+          pushJson = {
+            "name": String(nowFileName.value),
+            "src": sourceSrc
+          }
         } else if (type === "backgroundMusic") {
           //背景音乐
           path = "assets/resources/music/backgroundMusic/"
-          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
-
+          sourceSrc =  path + file.files[0].name
+          jsonPath = chapterInfo.value['material']['musicList']['background'];
+          pushJson = {
+            "name": String(nowFileName.value),
+            "src": sourceSrc
+          }
         } else if (type === "headImg") {
-          //头图
+          //头图（待定）
           path = "assets/resources/headImg/"
-          localforage.setItem(path + file.files[0].name, new Blob([e.target.result]))
-
+          sourceSrc =  path + file.files[0].name
         }
+
+        //通用方法
+        jsonPath.forEach((item)=>{
+          if (item['name'] ===  String(nowFileName.value)){
+            throw new Error("存在同名文件")
+          }
+        })
+        localforage.setItem(sourceSrc, new Blob([e.target.result])).then(()=>{
+          sourceList.value[sourceSrc] = ""
+          setSourceURL(sourceSrc)
+          jsonPath.push(pushJson)
+        })
+        sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
+        message.success("保存成功")
         addSourceShow.value = false;
       } catch (e) {
         message.error(e.toString())
@@ -904,19 +945,21 @@ const addSource = function (type) {
 /**
  * 删除资源
  */
-const deleteSource = function (sourceName) {
-  console.log(sourceName)
-  localforage.removeItem(sourceName).then(()=>{
-    chapterInfo.value['material']['backgroundList'].forEach((item,index)=>{
-      if (item['src'] ===  String(sourceName)){
-        console.log(chapterInfo.value['material']['backgroundList'].splice(index,1));
-        //保存剧本
-        sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
-        message.success("删除成功")
-        return;
-      }
+const deleteSource = function (sourceName,type) {
+  if (type === "backgroundImg"){
+    //背景图
+    localforage.removeItem(sourceName).then(()=>{
+      chapterInfo.value['material']['backgroundList'].forEach((item,index)=>{
+        if (item['src'] ===  String(sourceName)){
+          console.log(chapterInfo.value['material']['backgroundList'].splice(index,1));
+          //保存剧本
+          sessionStorage.setItem("scriptRow", JSON.stringify(scriptRow.value))
+          message.success("删除成功")
+          return;
+        }
+      })
     })
-  })
+  }
 }
 
 onMounted(() => {
